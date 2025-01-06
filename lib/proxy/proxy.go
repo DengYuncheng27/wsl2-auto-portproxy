@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"time"
+
+	"github.com/HobaiRiku/wsl2-auto-portproxy/lib/config"
 )
 
 type Proxy struct {
@@ -51,6 +53,27 @@ func (p *Proxy) Stop() error {
 
 func (p *Proxy) handleTCPConn(conn *net.TCPConn, timeout int64) {
 	log.Printf("Client '%v' connected!\n", conn.RemoteAddr())
+
+	// 获取客户端 IP
+	clientIP := conn.RemoteAddr().(*net.TCPAddr).IP.String()
+
+	// 检查端口是否有 IP 白名单限制
+	conf, _ := config.GetConfig()
+	if ipList, exists := conf.PortIpWhite[fmt.Sprintf("%d", p.Port)]; exists {
+		isAllowed := false
+		for _, ip := range ipList {
+			if clientIP == ip {
+				isAllowed = true
+				break
+			}
+		}
+		if !isAllowed {
+			log.Printf("Unauthorized access attempt to port %d from IP: %s\n", p.Port, clientIP)
+			conn.Close()
+			return
+		}
+		log.Printf("Authorized access to port %d from IP: %s\n", p.Port, clientIP)
+	}
 
 	_ = conn.SetKeepAlive(true)
 	_ = conn.SetKeepAlivePeriod(time.Second * 15)

@@ -3,8 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/HobaiRiku/wsl2-auto-portproxy/lib/util"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os/user"
@@ -12,18 +10,24 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/HobaiRiku/wsl2-auto-portproxy/lib/util"
+	"github.com/pkg/errors"
 )
 
 type Config struct {
 	OnlyPredefined bool
 	Predefined     PredefinedPorts
 	Ignore         IgnorePorts
+	PortIpWhite    PortIpWhite `json:"portIpWhite"`
 }
 
 type PredefinedPorts struct {
 	Tcp []PortProxy `json:"tcp"`
 	Udp []PortProxy `json:"udp"`
 }
+
+type PortIpWhite map[string][]string
 
 type PortProxy struct {
 	Local  int64
